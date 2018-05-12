@@ -45,19 +45,23 @@ void naive_rotate(int dim, pixel *src, pixel *dst)
  * IMPORTANT: This is the version you will be graded on
  */
 char rotate_descr[] = "rotate: Current working version";
+
+int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
 void rotate(int dim, pixel *src, pixel *dst) 
 {
-    int i, j;
+	int szi = gcd(32, dim), szj = gcd(32, dim);
+    int i, j, bi, bj;
 
-	for (j = 0; j < dim; j++) 
-		for (i = 0; i < dim; i++) {
-		    unsigned short tmpr = src[RIDX(i, j, dim)].red;
-		    unsigned short tmpg = src[RIDX(i, j, dim)].green;
-		    unsigned short tmpb = src[RIDX(i, j, dim)].blue;
-		    dst[RIDX(dim-1-j, i, dim)].red = tmpr;
-		    dst[RIDX(dim-1-j, i, dim)].green = tmpg;
-		    dst[RIDX(dim-1-j, i, dim)].blue = tmpb;
-		}
+	for (bj = 0; bj < dim; bj += szj)
+	for (bi = 0; bi < dim; bi += szi)
+	for (j = bj; j < bj + szj; j++) 
+	for (i = bi; i < bi + szi; i += 4) 
+	{
+		dst[RIDX(dim-1-j, i, dim)] = src[RIDX(i, j, dim)];
+		dst[RIDX(dim-1-j, i + 1, dim)] = src[RIDX(i + 1, j, dim)];
+		dst[RIDX(dim-1-j, i + 2, dim)] = src[RIDX(i + 2, j, dim)];
+		dst[RIDX(dim-1-j, i + 3, dim)] = src[RIDX(i + 3, j, dim)];
+	}
 }
 
 /*********************************************************************
