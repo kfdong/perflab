@@ -50,8 +50,10 @@ int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
 void rotate(int dim, pixel *src, pixel *dst) 
 {
 	int szi = gcd(32, dim), szj = gcd(64, dim);
+	if (dim == 1024) szi = 16;
     int i, j, bi, bj;
 
+	if (szi == 32) {
 	for (bj = 0; bj < dim; bj += szj)
 	for (bi = 0; bi < dim; bi += szi)
 	for (j = bj; j < bj + szj; j++) 
@@ -89,6 +91,32 @@ void rotate(int dim, pixel *src, pixel *dst)
 		dst[RIDX(dim-1-j, i + 29, dim)] = src[RIDX(i + 29, j, dim)];
 		dst[RIDX(dim-1-j, i + 30, dim)] = src[RIDX(i + 30, j, dim)];
 		dst[RIDX(dim-1-j, i + 31, dim)] = src[RIDX(i + 31, j, dim)];
+	}
+	} else {
+	for (bj = 0; bj < dim; bj += szj)
+	for (bi = 0; bi < dim; bi += szi)
+	for (j = bj; j < bj + szj; j++) 
+	{
+		i=bi;
+		dst[RIDX(dim-1-j, i + 0, dim)] = src[RIDX(i + 0, j, dim)];
+		dst[RIDX(dim-1-j, i + 1, dim)] = src[RIDX(i + 1, j, dim)];
+		dst[RIDX(dim-1-j, i + 2, dim)] = src[RIDX(i + 2, j, dim)];
+		dst[RIDX(dim-1-j, i + 3, dim)] = src[RIDX(i + 3, j, dim)];
+		dst[RIDX(dim-1-j, i + 4, dim)] = src[RIDX(i + 4, j, dim)];
+		dst[RIDX(dim-1-j, i + 5, dim)] = src[RIDX(i + 5, j, dim)];
+		dst[RIDX(dim-1-j, i + 6, dim)] = src[RIDX(i + 6, j, dim)];
+		dst[RIDX(dim-1-j, i + 7, dim)] = src[RIDX(i + 7, j, dim)];
+		/*
+		dst[RIDX(dim-1-j, i + 8, dim)] = src[RIDX(i + 8, j, dim)];
+		dst[RIDX(dim-1-j, i + 9, dim)] = src[RIDX(i + 9, j, dim)];
+		dst[RIDX(dim-1-j, i + 10, dim)] = src[RIDX(i + 10, j, dim)];
+		dst[RIDX(dim-1-j, i + 11, dim)] = src[RIDX(i + 11, j, dim)];
+		dst[RIDX(dim-1-j, i + 12, dim)] = src[RIDX(i + 12, j, dim)];
+		dst[RIDX(dim-1-j, i + 13, dim)] = src[RIDX(i + 13, j, dim)];
+		dst[RIDX(dim-1-j, i + 14, dim)] = src[RIDX(i + 14, j, dim)];
+		dst[RIDX(dim-1-j, i + 15, dim)] = src[RIDX(i + 15, j, dim)];
+		*/
+	}
 	}
 }
 
