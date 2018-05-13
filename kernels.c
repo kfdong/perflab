@@ -49,18 +49,23 @@ char rotate_descr[] = "rotate: Current working version";
 int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
 void rotate(int dim, pixel *src, pixel *dst) 
 {
+	pixel tmp0, tmp1;
 	int szi = gcd(32, dim), szj = gcd(32, dim);
     int i, j, bi, bj;
 
 	for (bj = 0; bj < dim; bj += szj)
 	for (bi = 0; bi < dim; bi += szi)
 	for (j = bj; j < bj + szj; j++) 
-	for (i = bi; i < bi + szi; i += 4) 
+	for (i = bi; i < bi + szi; i+=2) 
 	{
-		dst[RIDX(dim-1-j, i, dim)] = src[RIDX(i, j, dim)];
+		tmp0 = src[RIDX(i, j, dim)];
+		dst[RIDX(dim-1-j, i, dim)] = tmp0;
+		tmp1 = src[RIDX(i + 1, j, dim)];
+		dst[RIDX(dim-1-j, i + 1, dim)] = tmp1;
+		/*
 		dst[RIDX(dim-1-j, i + 1, dim)] = src[RIDX(i + 1, j, dim)];
 		dst[RIDX(dim-1-j, i + 2, dim)] = src[RIDX(i + 2, j, dim)];
-		dst[RIDX(dim-1-j, i + 3, dim)] = src[RIDX(i + 3, j, dim)];
+		dst[RIDX(dim-1-j, i + 3, dim)] = src[RIDX(i + 3, j, dim)];*/
 	}
 }
 
