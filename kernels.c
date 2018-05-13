@@ -52,8 +52,8 @@ void rotate(int dim, pixel *src, pixel *dst)
 	int szi = gcd(32, dim), szj = gcd(64, dim);
     int i, j, bi, bj;
 
-	for (bi = 0; bi < dim; bi += szi)
 	for (bj = 0; bj < dim; bj += szj)
+	for (bi = 0; bi < dim; bi += szi)
 	for (j = bj; j < bj + szj; j++) 
 	{
 		i=bi;
