@@ -236,13 +236,12 @@ static pixel avg(int dim, int i, int j, pixel *src)
  * naive_smooth - The naive baseline version of smooth 
  */
 char naive_smooth_descr[] = "naive_smooth: Naive baseline implementation";
-void naive_smooth(int dim, pixel *src, pixel *dst) 
+void naive_smooth(int dim, pixel *src, pixel *dst)
 {
-    int i, j;
-
-    for (i = 0; i < dim; i++)
+	int i, j;
+	for (i = 0; i < dim; i++)
 	for (j = 0; j < dim; j++)
-	    dst[RIDX(i, j, dim)] = avg(dim, i, j, src);
+		dst[RIDX(i, j, dim)] = avg(dim, i, j, src);
 }
 
 /*
@@ -252,9 +251,97 @@ void naive_smooth(int dim, pixel *src, pixel *dst)
 char smooth_descr[] = "smooth: Current working version";
 void smooth(int dim, pixel *src, pixel *dst) 
 {
-    naive_smooth(dim, src, dst);
-}
+    int i, j;
+	/*
+	 * this version speeds up to 36.9 
+	 *
+	unsigned int tmpr1, tmpb1, tmpg1;
+	unsigned int tmpr2, tmpb2, tmpg2;
+	unsigned int tmpr3, tmpb3, tmpg3;
+	unsigned int tmpr4, tmpb4, tmpg4;
 
+    for (i = 0; i < dim; i += 2) {
+		tmpr1 = src[RIDX(i, 0, dim)].red + src[RIDX(i, 1, dim)].red + src[RIDX(i, 2, dim)].red;
+		tmpb1 = src[RIDX(i, 0, dim)].blue + src[RIDX(i, 1, dim)].blue + src[RIDX(i, 2, dim)].blue;
+		tmpg1 = src[RIDX(i, 0, dim)].green + src[RIDX(i, 1, dim)].green + src[RIDX(i, 2, dim)].green;
+		tmpr2 = src[RIDX(i + 1, 0, dim)].red + src[RIDX(i + 1, 1, dim)].red + src[RIDX(i + 1, 2, dim)].red;
+		tmpb2 = src[RIDX(i + 1, 0, dim)].blue + src[RIDX(i + 1, 1, dim)].blue + src[RIDX(i + 1, 2, dim)].blue;
+		tmpg2 = src[RIDX(i + 1, 0, dim)].green + src[RIDX(i + 1, 1, dim)].green + src[RIDX(i + 1, 2, dim)].green;
+		tmpr3 = src[RIDX(i + 2, 0, dim)].red + src[RIDX(i + 2, 1, dim)].red + src[RIDX(i + 2, 2, dim)].red;
+		tmpb3 = src[RIDX(i + 2, 0, dim)].blue + src[RIDX(i + 2, 1, dim)].blue + src[RIDX(i + 2, 2, dim)].blue;
+		tmpg3 = src[RIDX(i + 2, 0, dim)].green + src[RIDX(i + 2, 1, dim)].green + src[RIDX(i + 2, 2, dim)].green;
+		tmpr4 = src[RIDX(i + 3, 0, dim)].red + src[RIDX(i + 3, 1, dim)].red + src[RIDX(i + 3, 2, dim)].red;
+		tmpb4 = src[RIDX(i + 3, 0, dim)].blue + src[RIDX(i + 3, 1, dim)].blue + src[RIDX(i + 3, 2, dim)].blue;
+		tmpg4 = src[RIDX(i + 3, 0, dim)].green + src[RIDX(i + 3, 1, dim)].green + src[RIDX(i + 3, 2, dim)].green;
+		for (j = 1; j < dim; ++j) {
+			if (i + 1 < dim) {
+				dst[RIDX(i + 1, j, dim)].red = (tmpr1 + tmpr2 + tmpr3) / 9;
+				dst[RIDX(i + 1, j, dim)].blue = (tmpb1 + tmpb2 + tmpb3) / 9;
+				dst[RIDX(i + 1, j, dim)].green = (tmpg1 + tmpg2 + tmpg3) / 9;
+			}
+			if (i + 2 < dim) {
+				dst[RIDX(i + 2, j, dim)].red = (tmpr2 + tmpr3 + tmpr4) / 9;
+				dst[RIDX(i + 2, j, dim)].blue = (tmpb2 + tmpb3 + tmpb4) / 9;
+				dst[RIDX(i + 2, j, dim)].green = (tmpg2 + tmpg3 + tmpg4) / 9;
+			}
+
+			tmpr1 += src[RIDX(i, j + 2, dim)].red - src[RIDX(i, j - 1, dim)].red;
+			tmpb1 += src[RIDX(i, j + 2, dim)].blue - src[RIDX(i, j - 1, dim)].blue;
+			tmpg1 += src[RIDX(i, j + 2, dim)].green - src[RIDX(i, j - 1, dim)].green;
+			tmpr2 += src[RIDX(i + 1, j + 2, dim)].red - src[RIDX(i + 1, j - 1, dim)].red;
+			tmpb2 += src[RIDX(i + 1, j + 2, dim)].blue - src[RIDX(i + 1, j - 1, dim)].blue;
+			tmpg2 += src[RIDX(i + 1, j + 2, dim)].green - src[RIDX(i + 1, j - 1, dim)].green;
+			tmpr3 += src[RIDX(i + 2, j + 2, dim)].red - src[RIDX(i + 2, j - 1, dim)].red;
+			tmpb3 += src[RIDX(i + 2, j + 2, dim)].blue - src[RIDX(i + 2, j - 1, dim)].blue;
+			tmpg3 += src[RIDX(i + 2, j + 2, dim)].green - src[RIDX(i + 2, j - 1, dim)].green;
+			tmpr4 += src[RIDX(i + 3, j + 2, dim)].red - src[RIDX(i + 3, j - 1, dim)].red;
+			tmpb4 += src[RIDX(i + 3, j + 2, dim)].blue - src[RIDX(i + 3, j - 1, dim)].blue;
+			tmpg4 += src[RIDX(i + 3, j + 2, dim)].green - src[RIDX(i + 3, j - 1, dim)].green;
+		}
+	}
+	*/
+
+
+	/*
+	 * this version speeds up to 39.3
+	 */
+#define steps 16
+	unsigned int tmp[steps + 2][3];
+	int k;
+
+    for (i = 0; i < dim; i += steps) {
+		for (k = 0; k < steps + 2; ++k) {
+			tmp[k][0] = src[RIDX(i + k, 0, dim)].red + src[RIDX(i + k, 1, dim)].red + src[RIDX(i + k, 2, dim)].red;
+			tmp[k][1] = src[RIDX(i + k, 0, dim)].blue + src[RIDX(i + k, 1, dim)].blue + src[RIDX(i + k, 2, dim)].blue;
+			tmp[k][2] = src[RIDX(i + k, 0, dim)].green + src[RIDX(i + k, 1, dim)].green + src[RIDX(i + k, 2, dim)].green;
+		}
+		for (j = 1; j < dim; ++j) {
+			unsigned int sumr = tmp[0][0] + tmp[1][0] + tmp[2][0];
+			unsigned int sumb = tmp[0][1] + tmp[1][1] + tmp[2][1];
+			unsigned int sumg = tmp[0][2] + tmp[1][2] + tmp[2][2];
+			for (k = 0; k < steps; ++k) if (i + k + 1 < dim) {
+				dst[RIDX(i + k + 1, j, dim)].red = sumr / 9;
+				dst[RIDX(i + k + 1, j, dim)].blue = sumb / 9;
+				dst[RIDX(i + k + 1, j, dim)].green = sumg / 9;
+
+				sumr += tmp[k + 3][0] - tmp[k][0];
+				sumb += tmp[k + 3][1] - tmp[k][1];
+				sumg += tmp[k + 3][2] - tmp[k][2];
+			}
+			for (k = 0; k < steps + 2; ++k) {
+				tmp[k][0] += src[RIDX(i + k, j + 2, dim)].red - src[RIDX(i + k, j - 1, dim)].red;
+				tmp[k][1] += src[RIDX(i + k, j + 2, dim)].blue - src[RIDX(i + k, j - 1, dim)].blue;
+				tmp[k][2] += src[RIDX(i + k, j + 2, dim)].green - src[RIDX(i + k, j - 1, dim)].green;
+			}
+		}
+	}
+	for (i = 0; i < dim; ++i) {
+		dst[RIDX(i, 0, dim)] = avg(dim, i, 0, src);
+		dst[RIDX(0, i, dim)] = avg(dim, 0, i, src);
+		dst[RIDX(i, dim - 1, dim)] = avg(dim, i, dim - 1, src);
+		dst[RIDX(dim - 1, i, dim)] = avg(dim, dim - 1, i, src);
+	}
+}
 
 /********************************************************************* 
  * register_smooth_functions - Register all of your different versions
