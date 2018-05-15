@@ -345,8 +345,8 @@ void smooth(int dim, pixel *src, pixel *dst)
 
 	/*
 	 * this version upto 43.2
-	 * 
-#define steps 16
+	 *  */
+#define steps 32
 	unsigned int tmp[(steps + 2) * 3 + 3];
 	register unsigned int sumr, sumg, sumb;
 	int k;
@@ -375,37 +375,50 @@ void smooth(int dim, pixel *src, pixel *dst)
 				tmp[k * 3 + 2] += src[RIDX(i + 2, j + k, dim)].blue - src[RIDX(i - 1, j + k, dim)].blue;
 			}
 		}
-	}*/
+	} 
+	/*
+	 * this version upto 45.0, however it is slower on the server.
+	 *  
 	int rr1, rr2, rr3;
 	int gr1, gr2, gr3;
 	int br1, br2, br3;
-	int sumr, sumg, sumb;
+	register int sumr, sumg, sumb;
 
 	for (i = 1; i < dim; ++i) {
 		rr1 = src[RIDX(i - 1, 0, dim)].red + src[RIDX(i, 0, dim)].red + src[RIDX(i + 1, 0, dim)].red;
 		rr2 = src[RIDX(i - 1, 1, dim)].red + src[RIDX(i, 1, dim)].red + src[RIDX(i + 1, 1, dim)].red;
+		sumr = rr1 + rr2;
 		rr3 = src[RIDX(i - 1, 2, dim)].red + src[RIDX(i, 2, dim)].red + src[RIDX(i + 1, 2, dim)].red;
-		sumr = rr1 + rr2 + rr3;
+		sumr += rr3;
 		gr1 = src[RIDX(i - 1, 0, dim)].green + src[RIDX(i, 0, dim)].green + src[RIDX(i + 1, 0, dim)].green;
 		gr2 = src[RIDX(i - 1, 1, dim)].green + src[RIDX(i, 1, dim)].green + src[RIDX(i + 1, 1, dim)].green;
+		sumg = gr1 + gr2;
 		gr3 = src[RIDX(i - 1, 2, dim)].green + src[RIDX(i, 2, dim)].green + src[RIDX(i + 1, 2, dim)].green;
-		sumg = gr1 + gr2 + gr3;
+		sumg += gr3;
 		br1 = src[RIDX(i - 1, 0, dim)].blue + src[RIDX(i, 0, dim)].blue + src[RIDX(i + 1, 0, dim)].blue;
 		br2 = src[RIDX(i - 1, 1, dim)].blue + src[RIDX(i, 1, dim)].blue + src[RIDX(i + 1, 1, dim)].blue;
+		sumb = br1 + br2;
 		br3 = src[RIDX(i - 1, 2, dim)].blue + src[RIDX(i, 2, dim)].blue + src[RIDX(i + 1, 2, dim)].blue;
-		sumb = br1 + br2 + br3;
+		sumb += br3;
+
 		for (j = 1; j < dim - 1; j += 3) {
 			dst[RIDX(i, j, dim)].red = sumr / 9;
 			dst[RIDX(i, j, dim)].green = sumg / 9;
 			dst[RIDX(i, j, dim)].blue = sumb / 9;
 			sumr -= rr1;
-			rr1 = src[RIDX(i - 1, j + 2, dim)].red + src[RIDX(i, j + 2, dim)].red + src[RIDX(i + 1, j + 2, dim)].red;
-			sumr += rr1;
 			sumg -= gr1;
-			gr1 = src[RIDX(i - 1, j + 2, dim)].green + src[RIDX(i, j + 2, dim)].green + src[RIDX(i + 1, j + 2, dim)].green;
-			sumg += gr1;
 			sumb -= br1;
-			br1 = src[RIDX(i - 1, j + 2, dim)].blue + src[RIDX(i, j + 2, dim)].blue + src[RIDX(i + 1, j + 2, dim)].blue;
+			rr1 = src[RIDX(i - 1, j + 2, dim)].red;
+			rr1 += src[RIDX(i, j + 2, dim)].red;
+			rr1 += src[RIDX(i + 1, j + 2, dim)].red;
+			gr1 = src[RIDX(i - 1, j + 2, dim)].green;
+			gr1 += src[RIDX(i, j + 2, dim)].green;
+			gr1 += src[RIDX(i + 1, j + 2, dim)].green;
+			br1 = src[RIDX(i - 1, j + 2, dim)].blue;
+			br1 += src[RIDX(i, j + 2, dim)].blue;
+			br1 += src[RIDX(i + 1, j + 2, dim)].blue;
+			sumr += rr1;
+			sumg += gr1;
 			sumb += br1;
 
 			dst[RIDX(i, j + 1, dim)].red = sumr / 9;
@@ -435,7 +448,39 @@ void smooth(int dim, pixel *src, pixel *dst)
 			br3 = src[RIDX(i - 1, j + 4, dim)].blue + src[RIDX(i, j + 4, dim)].blue + src[RIDX(i + 1, j + 4, dim)].blue;
 			sumb += br3;
 		}
+	} 
+
+	const int MaxN = (1 << 10) + 3;
+	int row[MaxN][3];
+	int sumr, sumg, sumb;
+
+	for (j = 0; j < dim; ++j) {
+		row[j][0] = src[RIDX(0, j, dim)].red + src[RIDX(1, j, dim)].red + src[RIDX(2, j, dim)].red;
+		row[j][1] = src[RIDX(0, j, dim)].green + src[RIDX(1, j, dim)].green + src[RIDX(2, j, dim)].green;
+		row[j][2] = src[RIDX(0, j, dim)].blue + src[RIDX(1, j, dim)].blue + src[RIDX(2, j, dim)].blue;
 	}
+	for (i = 1; i < dim - 1; ++i) {
+		sumr = row[0][0] + row[1][0] + row[2][0];
+		sumg = row[0][1] + row[1][1] + row[2][1];
+		sumb = row[0][2] + row[1][2] + row[2][2];
+
+		for (j = 1; j < dim - 1; ++j) {
+			dst[RIDX(i, j, dim)].red = sumr / 9;
+			sumr += row[j + 2][0] - row[j - 1][0];
+			row[j - 1][0] += src[RIDX(i + 2, j - 1, dim)].red - src[RIDX(i - 1, j - 1, dim)].red;
+			dst[RIDX(i, j, dim)].green = sumg / 9;
+			sumg += row[j + 2][1] - row[j - 1][1];
+			row[j - 1][1] += src[RIDX(i + 2, j - 1, dim)].green - src[RIDX(i - 1, j - 1, dim)].green;
+			dst[RIDX(i, j, dim)].blue = sumb / 9;
+			sumb += row[j + 2][2] - row[j - 1][2];
+			row[j - 1][2] += src[RIDX(i + 2, j - 1, dim)].blue - src[RIDX(i - 1, j - 1, dim)].blue;
+		}
+		for (j = dim - 1; j <= dim + 1; ++j) {
+			row[j - 1][0] += src[RIDX(i + 2, j - 1, dim)].red - src[RIDX(i - 1, j - 1, dim)].red;
+			row[j - 1][1] += src[RIDX(i + 2, j - 1, dim)].green - src[RIDX(i - 1, j - 1, dim)].green;
+			row[j - 1][2] += src[RIDX(i + 2, j - 1, dim)].blue - src[RIDX(i - 1, j - 1, dim)].blue;
+		}
+	} */
 
 	//first row
 	sumr = src[RIDX(0, 0, dim)].red + src[RIDX(0, 1, dim)].red + src[RIDX(0, 2, dim)].red
